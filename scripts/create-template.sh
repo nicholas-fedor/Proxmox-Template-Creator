@@ -46,9 +46,6 @@ qm create $VM_ID \
 --boot order=scsi0 \
 --tags $VM_TAGS
 
-# Add EFI Disk
-# qm set $VM_ID --efidisk0 file=$PROXMOX_DISK_IMAGE_VOLUME:1,pre-enrolled-keys=0,efitype=4m,format=raw
-
 # Create Template
 qm template $VM_ID
 
