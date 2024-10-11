@@ -1,0 +1,3 @@
+downloads/
+packer/ssh-credentials.auto.pkrvars.hcl
+scripts/uploads/personalize.sh

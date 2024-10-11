@@ -1,0 +1,24 @@
+#!/usr/bin/env sh
+
+# Shell script that is uploaded to /tmp directory on Proxmox host and subsequently run by virt-customize command
+
+# Add Apt-Cacher configuration
+echo 'Acquire::http::Proxy "http://192.168.1.2:3142";' | tee /etc/apt/apt.conf.d/00aptproxy
+
+# Add DoT configuration
+mkdir /etc/systemd/resolved.conf.d
+echo '[Resolve]
+DNS=192.168.1.3#adguard.example.com
+DNSOverTLS=yes
+DNSSEC=yes
+DNSSEC=allow-downgrade
+' | tee /etc/systemd/resolved.conf.d/dot.conf
+
+# Add Chrony
+apt install -y chrony
+echo 'server 192.168.1.4 iburst prefer' | tee -a /etc/chrony/sources.d/ntp.sources
+
+# Add `update` command
+echo "#!/usr/bin/env sh
+sudo apt update && sudo apt upgrade -y" | tee /usr/sbin/update
+chmod +x /usr/sbin/update
