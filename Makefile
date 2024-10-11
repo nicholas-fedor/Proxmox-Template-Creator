@@ -11,3 +11,6 @@ validate:
 
 build:
 	packer build ./packer
+
+run:
+	docker compose -f ./docker/docker-compose.yml up

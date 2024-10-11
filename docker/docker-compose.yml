@@ -1,0 +1,10 @@
+# Dockerized Packer for Provisioning Proxmox VM Templates
+services:
+  packer:
+    image: "hashicorp/packer:latest"
+    volumes:
+    - ../:/workspace
+    environment:
+      - PACKER_PLUGIN_PATH=/workspace/.packer.d/plugins
+    working_dir: /workspace
+    command: build /workspace/packer/

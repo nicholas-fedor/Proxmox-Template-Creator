@@ -8,18 +8,30 @@ This is a tool for creating Ubuntu Cloud-Init templates on Proxmox using Packer.
 
 2. Configure build variables using the `template.auto.pkrvars.hcl` file.
 
-2. Run the following command from the top-level directory:
+3. Run the following command from the top-level directory:
 
-   ```console
-   make
-   ```
+   a. Running Packer directly:
 
-   This will:
+      ```console
+      make
+      ```
 
-   - Initialize Packer
-   - Format the .hcl files
-   - Validate the Packer configuration
-   - Build the Proxmox template
+      This will:
+
+      - Initialize Packer
+      - Format the .hcl files
+      - Validate the Packer configuration
+      - Build the Proxmox template
+
+   b. Running Packer via Docker Compose:
+
+      ```console
+      make run
+      ```
+
+      Expected Outcome:
+
+      - Runs the `packer build` command within a Docker container.
 
 ## Program Logic
 
