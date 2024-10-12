@@ -1,4 +1,4 @@
-# Packer Proxmox Ubuntu Cloud-Init Template Creator
+# Proxmox Template Creator
 
 This is a tool for creating Ubuntu Cloud-Init templates on Proxmox using Packer.
 
