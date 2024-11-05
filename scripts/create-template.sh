@@ -9,7 +9,7 @@
 # virt-customize documentation: https://www.libguestfs.org/virt-customize.1.html
 
 # Download dependencies
-apt update -y && apt install -y libguestfs-tools --no-install-recommends
+sudo apt update -y && sudo apt install -y libguestfs-tools --no-install-recommends
 
 # Resize cloud image
 qemu-img resize /tmp/$CLOUD_IMG_NAME 32G
@@ -22,13 +22,13 @@ virt-customize -a /tmp/$CLOUD_IMG_NAME --run /tmp/personalize.sh
 rm /tmp/personalize.sh || echo "personalize.sh script not present"
 
 # Remove existing template
-qm destroy $VM_ID --destroy-unreferenced-disks --purge || echo "VM not present"
+sudo qm destroy $VM_ID --destroy-unreferenced-disks --purge || echo "VM not present"
 
 # Generate BUILD_DATETIME
 BUILD_DATETIME=$(date +"%Y-%m-%d at %H:%M")
 
 # Create a new VM 
-qm create $VM_ID \
+sudo qm create $VM_ID \
 --name $VM_NAME \
 --description "$VM_NAME template built on $BUILD_DATETIME by Packer" \
 --ostype l26 \
@@ -47,7 +47,7 @@ qm create $VM_ID \
 --tags $VM_TAGS
 
 # Create Template
-qm template $VM_ID
+sudo qm template $VM_ID
 
 # Cleanup *.img files
 rm /tmp/*.img
