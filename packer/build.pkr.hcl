@@ -8,7 +8,8 @@ build {
   // https://developer.hashicorp.com/packer/docs/provisioners/shell-local
   // Downloads the cloud image to the Packer host downloads subdirectory
   provisioner "shell-local" {
-    inline = ["wget -P ./downloads -nc --continue --show-progress --progress=dot:giga ${var.cloud_img_url}"]
+    #inline = ["wget -P ./downloads -nc --continue --show-progress --progress=dot:giga ${var.cloud_img_url}"]
+    inline = ["curl -o ./downloads/${var.cloud_img_name} ${var.cloud_img_url}"]
   }
 
   // https://developer.hashicorp.com/packer/docs/provisioners/file
