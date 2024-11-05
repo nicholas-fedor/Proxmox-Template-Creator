@@ -41,7 +41,7 @@ sudo qm create $VM_ID \
 --ide2 $PROXMOX_DISK_IMAGE_VOLUME:cloudinit \
 --cpu cputype=$VM_CPU_TYPE \
 --memory $VM_MEMORY \
---net0 virtio,bridge=vmbr0 \
+--net0 virtio,bridge=$VM_NETWORK_BRIDGE \
 --ipconfig0 ip=dhcp,ip6=dhcp \
 --boot order=scsi0 \
 --tags $VM_TAGS

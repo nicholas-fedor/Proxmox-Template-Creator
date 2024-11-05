@@ -69,6 +69,12 @@ variable "template_vm_memory" {
   default     = 2048
 }
 
+variable "template_vm_network_bridge" {
+  type        = string
+  description = "VM network bridge, i.e. vmbr0"
+  default     = "vmbr0"
+}
+
 variable "proxmox_disk_image_volume" {
   type        = string
   description = "Proxmox disk image storage location, i.e. local-zfs"

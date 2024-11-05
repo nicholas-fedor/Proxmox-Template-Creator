@@ -40,6 +40,8 @@ build {
       "VM_CPU_TYPE=${var.template_vm_cpu_type}",
       // VM Template Memory Settings
       "VM_MEMORY=${var.template_vm_memory}",
+      // VM Template Network Bridge
+      "VM_NETWORK_BRIDGE=${var.template_vm_network_bridge}",
       // VM Template Tags
       "VM_TAGS=template;${var.os_name};${var.os_release}",
     ]
