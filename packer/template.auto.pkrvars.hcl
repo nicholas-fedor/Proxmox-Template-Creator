@@ -19,4 +19,5 @@ template_vm_cpu_type = "host"
 // VM Template Memory Settings
 template_vm_memory = 4096
 // VM Template Network Bridge
-template_vm_network_bridge = "vmbr1"
+template_vm_network_bridge = "vmbr0"
+# template_vm_network_bridge = "vmbr1"
