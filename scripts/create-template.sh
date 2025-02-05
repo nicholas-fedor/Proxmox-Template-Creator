@@ -8,6 +8,9 @@
 # Proxmox QEMU CLI command documentation: https://pve.proxmox.com/pve-docs/qm.1.html
 # virt-customize documentation: https://www.libguestfs.org/virt-customize.1.html
 
+# Install Sudo, if needed
+apt update && apt install -y sudo
+
 # Download dependencies
 sudo apt update -y && sudo apt install -y libguestfs-tools --no-install-recommends
 
