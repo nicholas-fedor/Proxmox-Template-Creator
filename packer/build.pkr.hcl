@@ -1,7 +1,7 @@
 // build.pkr.hcl
 
 build {
-  // Uses the null.proxmox source for creating an SSH connection with the Proxmox host, 
+  // Uses the null.proxmox source for creating an SSH connection with the Proxmox host,
   // which is subsequently used by the provisioners
   sources = ["sources.null.proxmox"]
 
@@ -13,13 +13,13 @@ build {
   }
 
   // https://developer.hashicorp.com/packer/docs/provisioners/file
-  // Uploads ./downloads to /tmp on the Proxmox host 
+  // Uploads ./downloads to /tmp on the Proxmox host
   provisioner "file" {
     source      = "./downloads/"
     destination = "/tmp"
   }
 
-  // Uploads ./scripts/upload/personalize.sh to /tmp on the Proxmox host 
+  // Uploads ./scripts/upload/personalize.sh to /tmp on the Proxmox host
   provisioner "file" {
     source      = "./scripts/uploads/personalize.sh"
     destination = "/tmp/personalize.sh"
