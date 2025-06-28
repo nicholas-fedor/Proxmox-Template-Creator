@@ -7,11 +7,13 @@
 proxmox_disk_image_volume = "local-zfs"
 // OS Settings
 os_name    = "ubuntu"
-os_release = "oracular"
+os_release = "plucky"
 os_arch    = "amd64"
 // Cloud Image Settings
-cloud_img_url  = "https://cloud-images.ubuntu.com/oracular/current/oracular-server-cloudimg-amd64.img"
-cloud_img_name = "oracular-server-cloudimg-amd64.img"
+# cloud_img_url  = "https://cloud-images.ubuntu.com/oracular/current/oracular-server-cloudimg-amd64.img"
+# cloud_img_name = "oracular-server-cloudimg-amd64.img"
+cloud_img_url  = "https://cloud-images.ubuntu.com/plucky/current/plucky-server-cloudimg-amd64.img"
+cloud_img_name = "plucky-server-cloudimg-amd64.img"
 // VM Template General Settings
 template_vm_id = "9000"
 // VM Template CPU Settings
