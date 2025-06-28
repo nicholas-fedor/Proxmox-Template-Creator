@@ -1,0 +1,20 @@
+# Normalize all text files to LF line endings
+* text=auto eol=lf
+
+# Explicitly set text files used in the project to LF
+*.hcl text eol=lf
+*.sh text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.gitignore text eol=lf
+*.gitattributes text eol=lf
+Dockerfile text eol=lf
+*.dockerignore text eol=lf
+Makefile text eol=lf
+
+# Treat binary files as binary (no line-ending conversion or diff)
+*.img binary
+*.iso binary
+*.qcow2 binary
