@@ -1,0 +1,5 @@
+# Replace example.com with your Proxmox host
+# Proxmox Host FQDN or IP
+ssh_host     = "example.com"
+# Proxmox user (default: root)
+ssh_username = "root"
