@@ -1,0 +1,21 @@
+# scripts/task/lint/taskfile.yaml
+# Linting tasks for create-template.sh and personalize.sh.
+
+version: "3"
+
+silent: true
+
+tasks:
+  lint-linux:
+    desc: Lint shell scripts (create-template.sh and personalize.sh) with shellcheck on Linux.
+    platforms: [linux]
+    cmds:
+      - command -v shellcheck >/dev/null || { echo "shellcheck not installed."; exit 1; }
+      - shellcheck scripts/create-template.sh
+      - test -f scripts/packer/uploads/personalize.sh && shellcheck scripts/packer/uploads/personalize.sh || echo "personalize.sh not found, skipping."
+
+  lint-windows:
+    desc: Lint shell scripts (create-template.sh and personalize.sh) with shellcheck on Windows.
+    platforms: [windows]
+    cmds:
+      - pwsh -Command "if (-not (Get-Command shellcheck -ErrorAction SilentlyContinue)) { Write-Error 'shellcheck not installed.'; exit 1 }; shellcheck scripts/packer/create-template.sh; if (Test-Path scripts/packer/uploads/personalize.sh) { shellcheck scripts/packer/uploads/personalize.sh } else { Write-Output 'personalize.sh not found, skipping.' }"
