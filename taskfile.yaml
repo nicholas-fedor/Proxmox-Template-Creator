@@ -1,0 +1,187 @@
+# Main Taskfile for Proxmox Template Creator, including split Taskfiles.
+# Run with 'task <target>', e.g., 'task build' or 'task clean'.
+# https://taskfile.dev
+
+version: "3"
+
+silent: true
+
+includes:
+  packer:
+    taskfile: scripts/task/packer/taskfile.yaml
+  lint:
+    taskfile: scripts/task/lint/taskfile.yaml
+  clean:
+    taskfile: scripts/task/clean/taskfile.yaml
+  deps:
+    taskfile: scripts/task/deps/taskfile.yaml
+
+tasks:
+  # Main Tasks
+  lint:
+    desc: Lint shell scripts (create-template.sh and personalize.sh).
+    deps:
+      - lint-linux
+      - lint-windows
+
+  validate:
+    desc: Validate Packer configuration.
+    deps:
+      - validate-linux
+      - validate-windows
+
+  check:
+    desc: Verify required tools and environment.
+    deps:
+      - check-linux
+      - check-windows
+
+  # Informational Commands
+  print-os:
+    desc: Print the current operating system.
+    cmds:
+      - echo "{{OS}}-{{ARCH}}"
+
+  # Internal tasks to combine platform-specific subtasks
+  # Lint template shell scripts
+  lint-linux:
+    internal: true
+    desc: Lint shell scripts (create-template.sh and personalize.sh) on Linux.
+    platforms: [linux]
+    deps:
+      - lint:lint-linux
+
+  lint-windows:
+    internal: true
+    desc: Lint shell scripts (create-template.sh and personalize.sh) on Windows.
+    platforms: [windows]
+    deps:
+      - lint:lint-windows
+
+  # Validate packer configuration
+  validate-linux:
+    internal: true
+    desc: Validate Packer configuration on Linux.
+    platforms: [linux]
+    deps:
+      - packer:validate-linux
+
+  validate-windows:
+    internal: true
+    desc: Validate Packer configuration on Windows.
+    platforms: [windows]
+    deps:
+      - packer:validate-windows
+
+  # Check dependencies
+  check-linux:
+    internal: true
+    desc: Verify required tools and environment on Linux.
+    platforms: [linux]
+    deps:
+      - deps:check-linux
+
+  check-windows:
+    internal: true
+    desc: Verify required tools and environment on Windows.
+    platforms: [windows]
+    deps:
+      - deps:check-windows
+
+  # Build template
+  build-linux:
+    internal: true
+    desc: Lint scripts, clean, and run full Packer build on Linux.
+    platforms: [linux]
+    deps:
+      - check-linux
+      - lint:lint-linux
+      - clean:run-linux
+      - packer:all
+
+  build-windows:
+    internal: true
+    desc: Lint scripts, clean, and run full Packer build on Windows.
+    platforms: [windows]
+    deps:
+      - deps:check-windows
+      - lint:lint-windows
+      - clean:run-windows
+      - packer:all
+
+  clean-linux:
+    internal: true
+    desc: Clean up temporary files, downloads, and Packer cache on Linux.
+    platforms: [linux]
+    deps:
+      - clean:run-linux
+
+  clean-windows:
+    internal: true
+    desc: Clean up temporary files, downloads, and Packer cache on Windows.
+    platforms: [windows]
+    deps:
+      - clean:run-windows
+
+  docker-build-linux:
+    internal: true
+    desc: Run Packer build in Docker container on Linux.
+    platforms: [linux]
+    deps:
+      - packer:run
+
+  docker-build-windows:
+    internal: true
+    desc: Run Packer build in Docker container on Windows.
+    platforms: [windows]
+    deps:
+      - packer:run
+
+  install-linux:
+    internal: true
+    desc: Install required tools (packer, shellcheck) for local workflow on Linux.
+    platforms: [linux]
+    deps:
+      - deps:install-packer
+      - deps:install-shellcheck
+
+  install-windows:
+    internal: false
+    desc: Install required tools (packer, shellcheck, curl) for local workflow on Windows.
+    platforms: [windows]
+    deps:
+      - deps:install-packer
+      - deps:install-shellcheck
+      - deps:install-curl-windows
+
+  build:
+    desc: Run Packer build.
+    cmd: packer build ./packer
+
+  clean:
+    desc: Clean up temporary files, downloads, and Packer cache.
+    deps:
+      - clean-linux
+      - clean-windows
+
+  docker-build:
+    desc: Run Packer build in Docker container (alternative workflow).
+    deps:
+      - docker-build-linux
+      - docker-build-windows
+
+  install:
+    desc: Install required tools (packer, shellcheck, curl) for local workflow.
+    deps:
+      - install-linux
+      - install-windows
+
+  install-docker:
+    desc: Install Docker.
+    cmds:
+      - task: deps:install-docker
+
+  help:
+    desc: List all available tasks.
+    cmds:
+      - task --list-all
