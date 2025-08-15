@@ -1,0 +1,57 @@
+# scripts/task/packer/taskfile.yaml
+# Packer tasks for initializing, formatting, validating, and building Proxmox templates.
+# Primary: Local execution (init, fmt, validate, build, all).
+# Alternative: Docker execution (run).
+
+version: "3"
+
+silent: true
+
+tasks:
+  all:
+    desc: Run init, fmt, validate, and build (full local Packer workflow).
+    deps:
+      [init, fmt, validate-linux, validate-windows, build-linux, build-windows]
+
+  init:
+    desc: Initialize Packer configuration (no-op for built-in null builder).
+    platforms: [linux, windows]
+    cmds:
+      - packer init ./packer
+
+  fmt:
+    desc: Format Packer HCL files.
+    platforms: [linux, windows]
+    cmds:
+      - packer fmt ./packer
+
+  validate-linux:
+    desc: Validate Packer config on Linux.
+    platforms: [linux]
+    cmds:
+      - packer validate ./packer
+
+  validate-windows:
+    desc: Validate Packer config on Windows.
+    platforms: [windows]
+    cmds:
+      - pwsh -Command "packer validate ./packer"
+
+  build-linux:
+    desc: Build Packer template on Linux.
+    platforms: [linux]
+    cmds:
+      - packer build ./packer
+
+  build-windows:
+    desc: Build Packer template on Windows.
+    platforms: [windows]
+    cmds:
+      - pwsh -Command "packer build ./packer"
+
+  run:
+    desc: Run Packer build in Docker container (alternative workflow).
+    platforms: [linux, windows]
+    cmds:
+      - command -v docker >/dev/null || { echo "Docker not installed"; exit 1; }
+      - docker compose -f ./docker/docker-compose.yml up
