@@ -1,6 +1,6 @@
 # Proxmox Template Creator
 
-Automation for creating customized Ubuntu VM Cloud-Init templates on Proxmox.
+Create customized Ubuntu VM Cloud-Init templates on Proxmox using Hashicorp's Packer.
 
 ## Table of Contents
 
@@ -15,7 +15,7 @@ Automation for creating customized Ubuntu VM Cloud-Init templates on Proxmox.
     - [Task](#task)
     - [Shellcheck](#shellcheck)
     - [Docker](#docker)
-  - [Proxmox User Setup](#proxmox-user-setup)
+  - [SSH Setup](#ssh-setup)
 - [Scripting](#scripting)
   - [Taskfile](#taskfile)
   - [Makefile](#makefile)
@@ -28,11 +28,16 @@ Automation for creating customized Ubuntu VM Cloud-Init templates on Proxmox.
 
 ## Overview
 
-Proxmox allows users to create virtual machine (VM) templates, which can be used to quickly create virtual machines with a variety of pre-configured options.
+Proxmox allows users to create virtual machine (VM) templates, which can be copied to quickly create pre-configured VM's.
+In addition, it also supports Cloud-Init, which provides further VM management flexibility.
 
-Hashicorp's Packer makes it possible to automate this process. In addition, using Cloud-Init enables further flexibility in VM management and flexibility.
+By using Hashicorp's Packer, it is possible to automate the process of creating and modifying VM templates.
+This makes it possible to quickly and accurately create pre-configured templates.
 
-This project attempts to provide several options for running Packer, including using Packer directly or via a Docker container. In addition, Packer can be invoked either directly, using the provided Makefile, or by using Task scripts.
+This project uses Packer to automate the process of creating Ubuntu Cloud-Init VM templates on Proxmox.
+It will download the latest Cloud-Init image directly from Ubuntu, create the VM template using the desired configuration, and run a script to modify the VM image and apply a baseline configuration, such as installing Chrony and providing a basic `update` CLI command.
+
+To help automate running Packer, this project provides both `Make` and `Task` scripts that enable Packer to be run either directly or via Docker.
 
 ---
 
@@ -43,9 +48,11 @@ This project attempts to provide several options for running Packer, including u
 - [Quick Start](#quick-start)
 - [Prerequisites](#prerequisites)
 - [Installing Dependencies](#installing-dependencies)
-- [Proxmox User Setup](#proxmox-user-setup)
+- [SSH Setup](#ssh-setup)
 
 ### Quick Start
+
+This omits using `Make` or `Task` to run Packer.
 
 1. Clone the repository:
 
@@ -54,11 +61,9 @@ This project attempts to provide several options for running Packer, including u
    cd Proxmox-Template-Creator
    ```
 
-2. Install Packer.
-   <!-- TODO: Add link to installing Packer -->
+2. [Install](https://developer.hashicorp.com/packer/install) Packer.
 
-3. Configure SSH access to your Proxmox host (see SSH Configuration for details).
-    <!-- TODO: Add link to SSH Configuration section -->
+3. Configure SSH access to your Proxmox host (see [SSH Setup](#ssh-setup) for details).
 
 4. Rename and update `packer/proxmox-host.auto.pkrvars.hcl` to reference your target host's IP or FQDN:
 
@@ -101,32 +106,32 @@ If you already have Task installed, you can use it to install the required depen
 task install
 ```
 
-#### Packer
+#### [Packer](https://developer.hashicorp.com/packer/install)
 
-Bash:
+Linux (Ubuntu/Debian):
 
 ```bash
-curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
-sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
-sudo apt update && sudo apt install -y packer
+wget -O - https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+sudo apt update && sudo apt install packer
 ```
 
-PowerShell:
+Windows:
 
 ```powershell
 winget install HashiCorp.Packer
 ```
 
-#### Task
+#### [Task](https://taskfile.dev/docs/installation)
 
-Bash:
+Linux:
 
 ```bash
 LATEST_TAG=$(curl -s https://api.github.com/repos/go-task/task/releases/latest | grep tag_name | cut -d '"' -f 4)
 curl -L "https://github.com/go-task/task/releases/download/${LATEST_TAG}/task_linux_amd64.tar.gz" | sudo tar -xzf - -C /usr/local/bin task
 ```
 
-PowerShell:
+Windows:
 
 ```powershell
 $LATEST_TAG = (Invoke-RestMethod -Uri 'https://api.github.com/repos/go-task/task/releases/latest').tag_name
@@ -135,16 +140,16 @@ Expand-Archive task.zip -DestinationPath $env:SYSTEMROOT\System32
 Remove-Item task.zip
 ```
 
-#### Shellcheck
+#### [Shellcheck](https://github.com/koalaman/shellcheck?tab=readme-ov-file#installing)
 
-Bash:
+Linux:
 
 ```bash
 LATEST_TAG=$(curl -s https://api.github.com/repos/koalaman/shellcheck/releases/latest | grep tag_name | cut -d '"' -f 4)
 curl -L "https://github.com/koalaman/shellcheck/releases/download/${LATEST_TAG}/shellcheck-${LATEST_TAG}.linux.x86_64.tar.xz" | sudo tar -xJf - -C /usr/local/bin --strip-components=1 shellcheck-${LATEST_TAG}/shellcheck
 ```
 
-PowerShell:
+Windows:
 
 ```powershell
 $LATEST_TAG = (Invoke-RestMethod -Uri 'https://api.github.com/repos/koalaman/shellcheck/releases/latest').tag_name
@@ -153,15 +158,15 @@ Expand-Archive shellcheck.zip -DestinationPath $env:SYSTEMROOT\System32
 Remove-Item shellcheck.zip
 ```
 
-#### Docker
+#### [Docker](https://docs.docker.com/engine/install/)
 
-Bash:
+Linux:
 
 ```bash
 curl -fsSL https://get.docker.com | sh
 ```
 
-PowerShell:
+Windows:
 
 ```powershell
 Invoke-WebRequest -Uri "https://desktop.docker.com/win/main/amd64/Docker%20Desktop%20Installer.exe" -OutFile DockerDesktopInstaller.exe
@@ -171,63 +176,69 @@ Remove-Item DockerDesktopInstaller.exe
 
 [Back to Getting Started](#getting-started)
 
-### Proxmox User Setup
+### SSH Setup
 
-A user with SSH and root privileges is required on the Proxmox host.
+Packer requires SSH to connect to the Proxmox host.
+This project only supports key-based authentication; however, password-based authentication is possible.
 
-1. Create a user via the Proxmox webGUI:
+> This was a design decision to avoid the issue of passwords being inadvertely committed to Git.
+> I may introduce password-based support if HCL file support is added to SOPS ([GitHub Issue](https://github.com/getsops/sops/issues/292)) or via a Packer plugin.
+> I have yet to find a reasonable solution that integrates well with this project.
 
-   ```console
-   Datacenter > Permissions > Users > Add
-   ```
+1. Generate an SSH Key Pair
 
-   - Username: `hashicorp`
-   - Realm: `Linux PAM standard authentication`
-   - Password: `<your-password>`
-
-2. Create the user on the Proxmox host:
+   Linux:
 
    ```bash
-   useradd hashicorp
+   ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519_proxmox -N ""
    ```
 
-3. Set a password via the webGUI:
+   Windows:
 
-   ```console
-   Datacenter > Permissions > Users > [Select hashicorp] > Password
+   ```powershell
+   ssh-keygen -t ed25519 -f $env:USERPROFILE\.ssh\id_ed25519_proxmox -N ""
    ```
 
-4. Install `sudo`:
+2. Add the SSH Public Key to the Proxmox Host
+
+   Linux:
 
    ```bash
-   apt install sudo -y
+   ssh-copy-id -i ~/.ssh/id_ed25519_proxmox root@<proxmox-host-ip>
    ```
 
-5. Add `hashicorp` to `sudo` and `kvm` groups:
+   Windows:
 
-   ```bash
-   adduser hashicorp sudo
-   adduser hashicorp kvm
+   ```powershell
+   Get-Content $env:USERPROFILE\.ssh\id_ed25519_proxmox.pub | ssh root@<proxmox-host-ip> "cat >> ~/.ssh/authorized_keys"
    ```
 
-6. Set up a home directory:
+3. Start the SSH Agent
+
+   Linux:
 
    ```bash
-   mkdir /home/hashicorp
-   cp -rT /etc/skel /home/hashicorp
-   chown -R hashicorp:hashicorp /home/hashicorp
+   eval "$(ssh-agent -s)"
    ```
 
-7. Add your SSH public key to the `hashicorp` user's `authorized_keys` (from the Packer host):
+   Windows:
 
-   ```bash
-   ssh-copy-id -i ~/.ssh/id_rsa.pub hashicorp@<proxmox-host>
+   ```powershell
+   Start-Service ssh-agent
    ```
 
-8. Configure `sudoers` for passwordless root access:
+4. Add the key to the SSH Agent
+
+   Linux:
 
    ```bash
-   echo "hashicorp ALL=(ALL:ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/hashicorp
+   ssh-add ~/.ssh/id_ed25519_proxmox
+   ```
+
+   Windows:
+
+   ```powershell
+   ssh-add ~\.ssh\id_ed25519_proxmox
    ```
 
 [Back to Getting Started](#getting-started)
@@ -398,7 +409,7 @@ The Makefile provides a straightforward alternative for running Packer operation
    - Installs `libguestfs-tools` if needed.
    - Resizes image to 32G.
    - Installs QEMU Guest Agent.
-   - Runs `personalize.sh` (configures Apt-Cacher proxy, DNS over TLS, Chrony NTP, local mirror, `update` script).
+   - Runs `personalize.sh` (adds Apt proxy configuration, [Chrony](https://chrony-project.org/index.html), and an `update` script).
 4. **Create Template**:
    - Destroys existing template if present.
    - Creates VM with specified settings (CPU, memory, network, etc.).
