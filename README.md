@@ -427,7 +427,7 @@ The Makefile provides a straightforward alternative for running Packer operation
 - **Scripts**:
   - `create-template.sh`: Manages VM creation and cleanup.
   - `personalize.sh`: Add custom packages or configurations (e.g., NTP servers, mirrors).
-- **Credentials**: Use multiple files in `packer/credentials/` for different hosts; set `CREDENTIALS_FILE` env var.
+- **Hosts**: Edit `packer/proxmox-host.auto.pkrvars.hcl` for different hosts.
 
 ---
 
