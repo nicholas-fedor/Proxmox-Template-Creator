@@ -37,18 +37,6 @@ tasks:
     cmds:
       - pwsh -Command "packer validate ./packer"
 
-  build-linux:
-    desc: Build Packer template on Linux.
-    platforms: [linux]
-    cmds:
-      - packer build ./packer
-
-  build-windows:
-    desc: Build Packer template on Windows.
-    platforms: [windows]
-    cmds:
-      - pwsh -Command "packer build ./packer"
-
   run:
     desc: Run Packer build in Docker container (alternative workflow).
     platforms: [linux, windows]

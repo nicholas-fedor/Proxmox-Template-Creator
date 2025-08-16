@@ -88,27 +88,6 @@ tasks:
     deps:
       - deps:check-windows
 
-  # Build template
-  build-linux:
-    internal: true
-    desc: Lint scripts, clean, and run full Packer build on Linux.
-    platforms: [linux]
-    deps:
-      - check-linux
-      - lint:lint-linux
-      - clean:run-linux
-      - packer:all
-
-  build-windows:
-    internal: true
-    desc: Lint scripts, clean, and run full Packer build on Windows.
-    platforms: [windows]
-    deps:
-      - deps:check-windows
-      - lint:lint-windows
-      - clean:run-windows
-      - packer:all
-
   clean-linux:
     internal: true
     desc: Clean up temporary files, downloads, and Packer cache on Linux.
