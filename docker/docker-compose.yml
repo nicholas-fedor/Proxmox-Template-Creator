@@ -1,10 +1,13 @@
 # Dockerized Packer for Provisioning Proxmox VM Templates
 services:
   packer:
-    image: "hashicorp/packer:latest"
+    image: hashicorp/packer:latest
     volumes:
-    - ../:/workspace
+      - ../:/workspace
+      - ${HOME}/.ssh:/root/.ssh:ro # Mount SSH keys
     environment:
       - PACKER_PLUGIN_PATH=/workspace/.packer.d/plugins
+      - SSH_AUTH_SOCK=/ssh-agent # Optional: If using ssh-agent
     working_dir: /workspace
-    command: build /workspace/packer/
+    command: sh -c "apk add --no-cache curl && \
+      packer build /workspace/packer"

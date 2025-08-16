@@ -1,0 +1,35 @@
+#!/usr/bin/env sh
+
+# This is an example version of the personalize.sh shell script.
+# The script is uploaded to the Proxmox host's /tmp directory and
+# then run by virt-customize against the virtual machine template image.
+#
+# This currently installs and/or adds configurations for the following:
+# * Apt Proxy
+# * Chrony
+# * `update` command alias
+#
+# You can modify this to perform any number of modifications, such as
+# installing Docker or configuring network storage, that front-runs the
+# use of other configuration tools, such as Ansible.
+#
+# Note that configuration items tied to Cloud-Init may result in conflicts
+# and unexpected behavior.
+
+# Add Apt Proxy configuration
+cat <<EOF | tee /etc/apt/apt.conf.d/00aptproxy
+Acquire::http::Proxy "http://192.168.1.2:3142";
+EOF
+
+# Add Chrony
+apt install -y chrony
+cat <<EOF | tee -a /etc/chrony/sources.d/ntp.sources
+server 192.168.1.4 iburst prefer
+EOF
+
+# Add `update` command
+cat <<EOF | tee /usr/sbin/update
+#!/usr/bin/env sh
+sudo apt update && sudo apt upgrade -y
+EOF
+chmod +x /usr/sbin/update
