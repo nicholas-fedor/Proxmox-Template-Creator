@@ -1,0 +1,19 @@
+# scripts/task/clean/taskfile.yaml
+# Cleanup tasks for temporary files and cache.
+
+version: "3"
+
+silent: true
+
+tasks:
+  run-linux:
+    desc: Clean up temporary files, downloads, and Packer cache on Linux.
+    platforms: [linux]
+    cmds:
+      - rm -rf downloads/* .packer.d/ packer_cache/
+
+  run-windows:
+    desc: Clean up temporary files, downloads, and Packer cache on Windows.
+    platforms: [windows]
+    cmds:
+      - pwsh -Command "Remove-Item -Recurse -Force downloads/*, .packer.d/, packer_cache/ -ErrorAction SilentlyContinue"

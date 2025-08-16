@@ -1,0 +1,163 @@
+# scripts/task/deps/taskfile.yaml
+# Dependency management tasks for checking and installing required tools.
+
+version: "3"
+
+silent: true
+
+tasks:
+  # Check Individual Dependencies
+  check-packer-linux:
+    desc: Check if Packer is installed on Linux.
+    platforms: [linux]
+    cmds:
+      - cmd: 'command -v packer >/dev/null && printf "\e[32m%-2s\e[0m %-10s - %s\n" "✅" "Packer" "$(packer --version)" || printf "\e[31m%-2s\e[0m %-10s - %s\n" "❌" "Packer" "Not installed. Run ''task deps:install-packer'' to install."'
+
+  check-shellcheck-linux:
+    desc: Check if ShellCheck is installed on Linux.
+    platforms: [linux]
+    cmds:
+      - cmd: 'command -v shellcheck >/dev/null && printf "\e[32m%-2s\e[0m %-10s - %s\n" "✅" "Shellcheck" "$(shellcheck --version | grep -oP ''version: \K.*'')" || printf "\e[31m%-2s\e[0m %-10s - %s\n" "❌" "Shellcheck" "Not installed (optional for linting). Run ''task deps:install-shellcheck'' to install."'
+
+  check-docker-linux:
+    desc: Check if Docker is installed on Linux.
+    platforms: [linux]
+    cmds:
+      - cmd: 'command -v docker >/dev/null && printf "\e[32m%-2s\e[0m %-10s - %s\n" "✅" "Docker" "$(docker --version | cut -d'' '' -f3 | cut -d'','' -f1)" || printf "\e[31m%-2s\e[0m %-10s - %s\n" "❌" "Docker" "Not installed (optional for alternative workflow). Run ''task deps:install-docker'' to install."'
+
+  check-packer-windows:
+    desc: Check if Packer is installed on Windows using PowerShell.
+    platforms: [windows]
+    cmds:
+      - cmd: pwsh -Command "if (Get-Command packer -ErrorAction SilentlyContinue) { packer --version } else { Write-Error 'Packer not installed. Run ''task deps:install-packer'' to install.'; exit 1 }"
+
+  check-curl-windows:
+    desc: Check if curl is installed on Windows using PowerShell.
+    platforms: [windows]
+    cmds:
+      - cmd: pwsh -Command "if (Get-Command curl.exe -ErrorAction SilentlyContinue) { curl.exe --version | Select-Object -First 1 } else { Write-Error 'curl not installed. Run ''task deps:install-curl-windows'' to install.'; exit 1 }"
+
+  check-shellcheck-windows:
+    desc: Check if ShellCheck is installed on Windows using PowerShell.
+    platforms: [windows]
+    cmds:
+      - cmd: pwsh -Command "if (Get-Command shellcheck -ErrorAction SilentlyContinue) { shellcheck --version | Select-String 'version:' } else { Write-Output 'ShellCheck not installed (optional for linting). Run ''task deps:install-shellcheck'' to install.'; exit 0 }"
+
+  check-docker-windows:
+    desc: Check if Docker is installed on Windows using PowerShell.
+    platforms: [windows]
+    cmds:
+      - cmd: pwsh -Command "if (Get-Command docker -ErrorAction SilentlyContinue) { docker --version } else { Write-Output 'Docker not installed (optional for alternative workflow). Run ''task deps:install-docker'' to install.'; exit 0 }"
+
+  # Check All Dependencies
+  check-linux:
+    desc: Check if required tools are installed on Linux.
+    platforms: [linux]
+    deps:
+      - check-packer-linux
+      - check-shellcheck-linux
+      - check-docker-linux
+
+  check-windows:
+    desc: Check if required tools are installed on Windows using PowerShell.
+    platforms: [windows]
+    cmds:
+      - cmd: pwsh -File scripts/powershell/check-deps.ps1
+
+  # Dependency Installation
+  install-curl-windows:
+    desc: Install curl on Windows using winget.
+    platforms: [windows]
+    cmds:
+      - cmd: |
+          pwsh -Command "
+            try {
+              winget install --id cURL.cURL --exact --accept-package-agreements --accept-source-agreements;
+              if (-not (Get-Command curl.exe -ErrorAction SilentlyContinue)) { Write-Error 'Failed to install curl; ensure network connectivity and try again'; exit 1 }
+            } catch {
+              Write-Error \"Failed to install curl: \$(\$_.Exception.Message)\";
+              exit 1
+            }
+          "
+          task deps:check-curl-windows
+
+  install-packer:
+    desc: Install Packer on Linux or Windows.
+    platforms: [linux, windows]
+    cmds:
+      - cmd: |
+          LATEST_TAG=$(curl -s https://api.github.com/repos/hashicorp/packer/releases/latest | grep tag_name | cut -d '"' -f 4)
+          VERSION=${LATEST_TAG#v}
+          curl -L "https://releases.hashicorp.com/packer/${VERSION}/packer_${VERSION}_linux_amd64.zip" -o packer.zip
+          sudo unzip packer.zip -d /usr/local/bin
+          rm packer.zip
+          task deps:check-packer-linux
+        platforms: [linux/amd64]
+      - cmd: |
+          pwsh -Command "
+            try {
+              \$release = (Invoke-RestMethod -Uri 'https://api.github.com/repos/hashicorp/packer/releases/latest' -ErrorAction Stop);
+              \$version = \$release.tag_name -replace '^v', '';
+              if (-not \$version -match '^[0-9]+\\.[0-9]+\\.[0-9]+$') { Write-Error 'Invalid Packer version format: \$version'; exit 1 };
+              \$url = \"https://releases.hashicorp.com/packer/\$version/packer_\${version}_windows_amd64.zip\";
+              Write-Output \"Downloading Packer from \$url\";
+              \$binDir = \"\$env:USERPROFILE\go\bin\";
+              if (-not (Test-Path \$binDir)) { New-Item -ItemType Directory -Path \$binDir | Out-Null };
+              curl.exe -L \"\$url\" -o \"\$env:USERPROFILE\Downloads\packer.zip\";
+              Expand-Archive \"\$env:USERPROFILE\Downloads\packer.zip\" -DestinationPath \"\$env:USERPROFILE\Downloads\temp_packer\" -Force;
+              Copy-Item \"\$env:USERPROFILE\Downloads\temp_packer\packer.exe\" -Destination \"\$binDir\packer.exe\" -Force;
+              Remove-Item \"\$env:USERPROFILE\Downloads\packer.zip\";
+              Remove-Item -Path \"\$env:USERPROFILE\Downloads\temp_packer\" -Recurse -Force
+            } catch {
+              Write-Error \"Failed to install Packer: \$(\$_.Exception.Message)\";
+              exit 1
+            }
+          "
+          task deps:check-packer-windows
+        platforms: [windows/amd64]
+
+  install-shellcheck:
+    desc: Install ShellCheck on Linux or Windows.
+    platforms: [linux, windows]
+    cmds:
+      - cmd: |
+          LATEST_TAG=$(curl -s https://api.github.com/repos/koalaman/shellcheck/releases/latest | grep tag_name | cut -d '"' -f 4)
+          curl -L "https://github.com/koalaman/shellcheck/releases/download/${LATEST_TAG}/shellcheck-${LATEST_TAG}.linux.x86_64.tar.xz" | sudo tar -xJf - -C /usr/local/bin --strip-components=1 shellcheck-${LATEST_TAG}/shellcheck
+          task deps:check-shellcheck-linux
+        platforms: [linux/amd64]
+      - cmd: |
+          pwsh -Command "
+            winget install --id koalaman.shellcheck --exact --accept-package-agreements --accept-source-agreements;
+            if (-not (Get-Command shellcheck -ErrorAction SilentlyContinue)) { Write-Error 'Failed to install ShellCheck; ensure network connectivity and try again'; exit 1 }
+          "
+          task deps:check-shellcheck-windows
+        platforms: [windows/amd64]
+
+  install-docker:
+    desc: Install Docker on Linux or Windows.
+    platforms: [linux, windows]
+    cmds:
+      - cmd: |
+          curl -fsSL https://get.docker.com -o get-docker.sh
+          sh get-docker.sh
+          rm get-docker.sh
+          task deps:check-docker-linux
+        platforms: [linux]
+      - cmd: |
+          pwsh -Command "
+            try {
+              \$url = 'https://desktop.docker.com/win/main/amd64/Docker%20Desktop%20Installer.exe';
+              Write-Output \"Downloading Docker Desktop Installer from \$url\";
+              \$installerPath = \"\$env:USERPROFILE\Downloads\DockerDesktopInstaller.exe\";
+              curl.exe -L \"\$url\" -o \"\$installerPath\";
+              Write-Output 'Installing Docker Desktop...';
+              Start-Process -FilePath \"\$installerPath\" -ArgumentList 'install', '--quiet', '--accept-source-agreements', '--accept-license' -Wait;
+              Remove-Item \"\$installerPath\";
+              if (-not (Get-Command docker -ErrorAction SilentlyContinue)) { Write-Error 'Failed to install Docker Desktop; ensure the installer ran successfully and try again'; exit 1 }
+            } catch {
+              Write-Error \"Failed to install Docker Desktop: \$(\$_.Exception.Message)\";
+              exit 1
+            }
+          "
+          task deps:check-docker-windows
+        platforms: [windows/amd64]
