@@ -73,7 +73,9 @@ This omits using `Make` or `Task` to run Packer.
 
 5. Update `packer/proxmox-template.auto.pkrvars.hcl` with any desired options for the VM template settings.
 
-6. Build the template:
+6. Rename `scripts/packer/templates/example-vm-description.md` to `scripts/packer/templates/vm-description.md` and update it to your specifications.
+
+7. Build the template:
 
    ```bash
    packer build ./packer
