@@ -26,6 +26,12 @@ build {
     destination = "/tmp/personalize.sh"
   }
 
+  # Uploads ./scripts/packer/templates/vm-description.md to /tmp on the Proxmox host
+  provisioner "file" {
+  source      = "./scripts/packer/templates/vm-description.md"
+  destination = "/tmp/vm-description.md"
+  }
+
   # Uploads and executes the create-template.sh shell script on the Proxmox host
   provisioner "shell" {
     environment_vars = [
