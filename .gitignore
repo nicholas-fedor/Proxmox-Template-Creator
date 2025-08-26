@@ -1,3 +1,4 @@
 downloads/
 packer/proxmox-host.auto.pkrvars.hcl
 scripts/packer/uploads/personalize.sh
+scripts/packer/templates/vm-description.md
