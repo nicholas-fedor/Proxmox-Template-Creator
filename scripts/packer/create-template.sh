@@ -30,13 +30,17 @@ rm /tmp/personalize.sh || echo "personalize.sh script not present"
 # Remove existing template
 qm destroy "$VM_ID" --destroy-unreferenced-disks --purge || echo "VM not present"
 
-# Generate BUILD_DATETIME
+# Generate and export BUILD_DATETIME
 BUILD_DATETIME=$(date +"%Y-%m-%d at %H:%M")
+export BUILD_DATETIME
+
+# Read and substitute variables in the Markdown description
+VM_DESCRIPTION=$(envsubst < /tmp/vm-description.md)
 
 # Create a new VM
 qm create "$VM_ID" \
   --name "$VM_NAME" \
-  --description "$VM_NAME template built on $BUILD_DATETIME by Packer" \
+  --description "$VM_DESCRIPTION" \
   --ostype l26 \
   --machine q35 \
   --bios ovmf \
@@ -57,3 +61,6 @@ qm template "$VM_ID"
 
 # Cleanup *.img files
 rm /tmp/*.img
+
+# Clean up uploaded Markdown file
+rm /tmp/vm-description.md
