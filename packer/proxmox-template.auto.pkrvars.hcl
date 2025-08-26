@@ -27,5 +27,4 @@ proxmox_disk_image_volume = "local-zfs"
 
 
 # VM Template Network Bridge Settings (Default: vmbr0)
-template_vm_network_bridge = "vmbr0" #
-# template_vm_network_bridge = "vmbr1"
+template_vm_network_bridge = "vmbr0"
