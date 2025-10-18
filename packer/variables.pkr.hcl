@@ -27,8 +27,8 @@ variable "os_name" {
 
 variable "os_release" {
   type        = string
-  description = "Ubuntu release, i.e. Plucky, Oracular, Noble, etc"
-  default     = "plucky"
+  description = "Ubuntu release, i.e. Questing, Plucky, Oracular, Noble, etc"
+  default     = "questing"
 }
 
 variable "os_arch" {
