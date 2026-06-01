@@ -22,7 +22,8 @@ build {
   # Uploads ./scripts/packer/uploads/personalize.sh to /tmp on the Proxmox host
   # https://developer.hashicorp.com/packer/docs/provisioners/file
   provisioner "file" {
-    source      = "./scripts/packer/uploads/personalize.sh"
+    source      = "./scripts/packer/uploads/personalize.sh.full"
+    # source      = "./scripts/packer/uploads/personalize.sh.minimal"
     destination = "/tmp/personalize.sh"
   }
 

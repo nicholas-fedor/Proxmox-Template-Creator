@@ -1,0 +1,90 @@
+#!/usr/bin/env sh
+
+# Shell script that is uploaded to /tmp directory on Proxmox host and subsequently run by virt-customize command
+
+# Add Apt-Cacher configuration
+echo 'Acquire::http::Proxy "http://192.168.100.13:3142";' | tee /etc/apt/apt.conf.d/00aptproxy
+
+# Add AdGuardDNSCLI
+# https://github.com/AdguardTeam/AdGuardDNSCLI
+apt install curl -y
+# Download and unpack the release
+cd /opt || exit
+curl -L "$(curl -s https://api.github.com/repos/AdguardTeam/AdGuardDNSCLI/releases/latest | grep -o 'https://[^"]*linux_amd64[^"]*\.tar\.gz')" | tar -xz -C .
+# Install the service
+/opt/AdGuardDNSCLI/AdGuardDNSCLI -s install -v
+# Remove the existing configuration
+rm /opt/AdGuardDNSCLI/config.yaml
+# Add the configuration
+cat <<EOF | tee -a /opt/AdGuardDNSCLI/config.yaml
+dns:
+  cache:
+    enabled: true
+    size: 128MB
+    client_size: 4MB
+  server:
+    bind_retry:
+      enabled: true
+      interval: 1s
+      count: 4
+    pending_requests:
+      enabled: true
+    listen_addresses:
+      - address: 127.0.0.1:53
+      - address: "[::1]:53"
+  bootstrap:
+    servers:
+      - address: 192.168.100.254:53
+      - address: 192.168.100.253:53
+    timeout: 2s
+  upstream:
+    groups:
+      default:
+        address: quic://adguard.papago.casa:853
+        match: []
+    timeout: 2s
+  fallback:
+    servers:
+      - address: quic://adguard-x399.papago.casa:853
+    timeout: 2s
+debug:
+  pprof:
+    port: 6060
+    enabled: false
+log:
+  output: syslog
+  format: default
+  timestamp: false
+  verbose: false
+schema_version: 3
+EOF
+
+# Disable and stop systemd-resolved to avoid conflicts and dynamic management of resolv.conf
+systemctl stop systemd-resolved
+systemctl disable systemd-resolved
+
+# Remove the existing resolv.conf symlink (managed by resolved)
+rm -f /etc/resolv.conf
+
+# Create a static resolv.conf pointing to AdGuardDNSCLI's listener
+cat <<EOF > /etc/resolv.conf
+nameserver 127.0.0.1
+search papago.casa
+options edns0 trust-ad
+EOF
+
+# Make resolv.conf immutable to prevent overwrites by cloud-init or other services on boot
+chattr +i /etc/resolv.conf
+
+# Add `update` command
+echo "#!/usr/bin/env sh
+sudo apt update && sudo apt upgrade -y" | tee /usr/sbin/update
+chmod +x /usr/sbin/update
+
+# Add Chrony
+apt install -y chrony
+echo 'server 192.168.20.20 iburst prefer' | tee -a /etc/chrony/sources.d/ntp.sources
+
+# Add local mirror configuration
+sed -i 's~http://archive.ubuntu.com/ubuntu~https://apt-mirror.papago.casa/ubuntu~g' /etc/cloud/cloud.cfg
+sed -i 's~http://security.ubuntu.com/ubuntu~https://apt-mirror.papago.casa/ubuntu~g' /etc/cloud/cloud.cfg

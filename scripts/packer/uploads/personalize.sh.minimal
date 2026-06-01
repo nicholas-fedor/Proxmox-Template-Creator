@@ -1,0 +1,19 @@
+#!/usr/bin/env sh
+
+# Shell script that is uploaded to /tmp directory on Proxmox host and subsequently run by virt-customize command
+
+# Add Apt-Cacher configuration
+# echo 'Acquire::http::Proxy "http://192.168.100.13:3142";' | tee /etc/apt/apt.conf.d/00aptproxy
+
+# Add `update` command
+echo "#!/usr/bin/env sh
+sudo apt update && sudo apt upgrade -y" | tee /usr/sbin/update
+chmod +x /usr/sbin/update
+
+# Add Chrony
+apt install -y chrony
+echo 'server 192.168.20.20 iburst prefer' | tee -a /etc/chrony/sources.d/ntp.sources
+
+# Add local mirror configuration
+sed -i 's~http://archive.ubuntu.com/ubuntu~https://apt-mirror.papago.casa/ubuntu~g' /etc/cloud/cloud.cfg
+sed -i 's~http://security.ubuntu.com/ubuntu~https://apt-mirror.papago.casa/ubuntu~g' /etc/cloud/cloud.cfg

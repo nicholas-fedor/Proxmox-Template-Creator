@@ -14,20 +14,35 @@ if ! command -v virt-customize >/dev/null 2>&1; then
     apt-get update -y
     apt-get install -y libguestfs-tools --no-install-recommends
 else
-    echo "libguestfs-tools already installed, skipping installation."
+    echo "libguestfs-tools already installed, skipping."
+fi
+
+# Ensure dhcpcd is available for libguestfs networking
+if ! command -v dhcpcd >/dev/null 2>&1; then
+  echo "Installing dhcpcd-base for libguestfs networking..."
+  apt-get update -y
+  apt-get install -y dhcpcd-base --no-install-recommends
+else
+  echo "dhcpcd already installed, skipping."
 fi
 
 # Resize cloud image
+echo "Resizing cloud image..."
 qemu-img resize "/tmp/$CLOUD_IMG_NAME" 32G
 
 # Add QEMU-Guest-Agent to image
-virt-customize -a "/tmp/$CLOUD_IMG_NAME" --install qemu-guest-agent
+echo "Adding QEMU-Guest-Agent to image..."
+virt-customize -a "/tmp/$CLOUD_IMG_NAME" \
+  --install qemu-guest-agent
 
 # Add personal configurations
-virt-customize -a "/tmp/$CLOUD_IMG_NAME" --run /tmp/personalize.sh
+echo "Adding personal configurations..."
+virt-customize -a "/tmp/$CLOUD_IMG_NAME" \
+  --run /tmp/personalize.sh
 rm /tmp/personalize.sh || echo "personalize.sh script not present"
 
 # Remove existing template
+echo "Removing existing template..."
 qm destroy "$VM_ID" --destroy-unreferenced-disks --purge || echo "VM not present"
 
 # Generate and export BUILD_DATETIME
@@ -38,6 +53,7 @@ export BUILD_DATETIME
 VM_DESCRIPTION=$(envsubst < /tmp/vm-description.md)
 
 # Create a new VM
+echo "Creating new VM..."
 qm create "$VM_ID" \
   --name "$VM_NAME" \
   --description "$VM_DESCRIPTION" \
@@ -57,10 +73,13 @@ qm create "$VM_ID" \
   --tags "$VM_TAGS"
 
 # Create Template
+echo "Creating template..."
 qm template "$VM_ID"
 
 # Cleanup *.img files
+echo "Cleaning up *.img files..."
 rm /tmp/*.img
 
 # Clean up uploaded Markdown file
+echo "Cleaning up uploaded Markdown file..."
 rm /tmp/vm-description.md

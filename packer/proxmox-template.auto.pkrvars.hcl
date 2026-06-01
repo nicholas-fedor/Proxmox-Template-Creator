@@ -3,16 +3,17 @@
 
 # OS Settings
 os_name    = "ubuntu" # Default: ubuntu
-os_release = "questing" # Default: questing
+os_release = "resolute" # Default: resolute
 os_arch    = "amd64"  # Default: amd64
 
 # Cloud Image Download URL
-cloud_img_url  = "https://cloud-images.ubuntu.com/questing/current/questing-server-cloudimg-amd64.img"
+cloud_img_url  = "https://cloud-images.ubuntu.com/resolute/current/resolute-server-cloudimg-amd64.img"
 # Cloud Image Filename
-cloud_img_name = "questing-server-cloudimg-amd64.img"
+cloud_img_name = "resolute-server-cloudimg-amd64.img"
 
 # VM Template General Settings (Default: 9000)
 template_vm_id = "9000"
+# template_vm_id = "9001"
 
 # VM Template CPU Settings (Default: x86-64-v2-AES)
 template_vm_cpu_type = "host"
@@ -27,4 +28,5 @@ proxmox_disk_image_volume = "local-zfs"
 
 
 # VM Template Network Bridge Settings (Default: vmbr0)
-template_vm_network_bridge = "vmbr0"
+# template_vm_network_bridge = "vmbr0"
+template_vm_network_bridge = "vlan100"
