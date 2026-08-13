@@ -66,6 +66,7 @@ qm create "$VM_ID" \
   --scsi0 "$PROXMOX_DISK_IMAGE_VOLUME":0,import-from=/tmp/"$CLOUD_IMG_NAME",ssd=1,iothread=1,cache=writeback,discard=on \
   --ide2 "$PROXMOX_DISK_IMAGE_VOLUME":cloudinit \
   --cpu cputype="$VM_CPU_TYPE" \
+  --cores "$VM_CPU_CORES" \
   --memory "$VM_MEMORY" \
   --net0 virtio,bridge="$VM_NETWORK_BRIDGE" \
   --ipconfig0 ip=dhcp,ip6=dhcp \

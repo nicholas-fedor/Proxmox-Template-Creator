@@ -62,6 +62,13 @@ variable "template_vm_cpu_type" {
   default     = "x86-64-v2-AES"
 }
 
+# VM Template CPU Cores
+variable "template_vm_cpu_cores" {
+  type = number
+  description = "VM Number of CPU Cores"
+  default = 4
+}
+
 # VM Template Memory Settings
 variable "template_vm_memory" {
   type        = number

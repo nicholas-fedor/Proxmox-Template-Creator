@@ -43,8 +43,10 @@ build {
       # VM Template General Settings
       "VM_ID=${var.template_vm_id}",
       "VM_NAME=${var.os_name}-${var.os_release}",
-      # VM Template OS Settings
+      # VM Template CPU Type
       "VM_CPU_TYPE=${var.template_vm_cpu_type}",
+      # VM Template CPU Cores
+      "VM_CPU_CORES=${var.template_vm_cpu_cores}",
       # VM Template Memory Settings
       "VM_MEMORY=${var.template_vm_memory}",
       # VM Template Network Bridge

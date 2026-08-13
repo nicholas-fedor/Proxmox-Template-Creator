@@ -18,6 +18,9 @@ template_vm_id = "9000"
 # VM Template CPU Settings (Default: x86-64-v2-AES)
 template_vm_cpu_type = "host"
 
+# VM Template CPU Cores (Default: 4)
+template_vm_cpu_cores = 8
+
 # VM Template Memory Settings (Default: 2048 MB, i.e. 2GB)
 template_vm_memory = 4096
 
